@@ -3,6 +3,29 @@
 <!DOCTYPE html>
 <html>
 <head>
+ <script> // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCKTylHMyiBiAtYWa0gCiQEXoWGh_ZqbtU",
+  authDomain: "bdmkitcheninventory.firebaseapp.com",
+  databaseURL: "https://bdmkitcheninventory-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "bdmkitcheninventory",
+  storageBucket: "bdmkitcheninventory.firebasestorage.app",
+  messagingSenderId: "984037524850",
+  appId: "1:984037524850:web:5724cd6c4ec5d405c049eb",
+  measurementId: "G-QSH87HC143"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+   <script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KITCHEN INVENTORY - Unified</title>
   <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet">
