@@ -1,4 +1,4 @@
-New
+Neeee
 
 <!DOCTYPE html>
 <html>
@@ -753,7 +753,25 @@ const firebaseConfig = {
 <body>
 
  <script>
-function readAllDataFromFirebase() {
+function readAllDataFromFirebase() 
+
+// --- AUTOSAVE TO FIREBASE ---
+function saveInventoryItemsToFirebase() {
+  database.ref('inventoryItems').set(inventoryItems);
+}
+
+function saveTableButtonsWeeklyToFirebase() {
+  database.ref('tableButtonsWeekly').set(tableButtonsWeekly);
+}
+function saveTableButtonsDailyToFirebase() {
+  database.ref('tableButtonsDaily').set(tableButtonsDaily);
+}
+
+function saveStatusInfoToFirebase() {
+  database.ref('statusInfo').set(statusInfo);
+}
+
+{
   // Inventory Box Items
   database.ref('inventoryItems').on('value', snapshot => {
     inventoryItems = snapshot.val() || [];
@@ -766,9 +784,6 @@ function readAllDataFromFirebase() {
     tableButtonsWeekly = snapshot.val() || [];
     renderTableButtons();
     renderTable();
-
-database.ref('tableButtonsWeekly').set(tableButtonsWeekly);
-
   });
 
   // Daily Table Buttons
@@ -776,10 +791,6 @@ database.ref('tableButtonsWeekly').set(tableButtonsWeekly);
     tableButtonsDaily = snapshot.val() || [];
     renderTableButtons();
     renderTable();
-
-database.ref('tableButtonsDaily').set(tableButtonsDaily);
-
-
   });
 
   // Status Info
@@ -1299,6 +1310,10 @@ let tableButtons = dashboardTableType === "weekly" ? tableButtonsWeekly : tableB
 
 renderDashboard();
 
+if (updateTableType === "weekly") saveTableButtonsWeeklyToFirebase();
+  else saveTableButtonsDailyToFirebase();
+
+
     }
     function changeQuantity(button, delta, idx) {
   const tableButtons = getCurrentTableButtons();
@@ -1307,6 +1322,9 @@ renderDashboard();
   let newValue = Math.max(0, (parseInt(items[idx].quantity) || 0) + delta);
   items[idx].quantity = newValue;
   renderTable();
+
+if (updateTableType === "weekly") saveTableButtonsWeeklyToFirebase();
+  else saveTableButtonsDailyToFirebase();
 
 }
     // --- Modal logic for Add/Delete Table/Item ---
@@ -1345,6 +1363,10 @@ renderDashboard();
       setActiveTableIndex(tableButtons.length - 1);
       renderTableButtons();
       renderTable();
+
+if (updateTableType === "weekly") saveTableButtonsWeeklyToFirebase();
+  else saveTableButtonsDailyToFirebase();
+
       closeAddTableModal();
     }
     function showDeleteTableModal() {
@@ -1383,6 +1405,10 @@ renderDashboard();
         if (getActiveTableIndex() >= idx) setActiveTableIndex(Math.max(0, getActiveTableIndex() - 1));
         renderTableButtons();
         renderTable();
+
+if (updateTableType === "weekly") saveTableButtonsWeeklyToFirebase();
+  else saveTableButtonsDailyToFirebase();
+
         closeDeleteTableModal();
       }
     }
@@ -1417,6 +1443,10 @@ renderDashboard();
       const activeTableIndex = getActiveTableIndex();
       tableButtons[activeTableIndex].items.push({name, quantity: parseInt(qty) || 0, unit, selected: false});
       renderTable();
+
+if (updateTableType === "weekly") saveTableButtonsWeeklyToFirebase();
+  else saveTableButtonsDailyToFirebase();
+
       closeAddItemModal();
     }
     
@@ -1429,6 +1459,10 @@ function changeQuantityInput(input, idx) {
   if (value < 0) value = 0;
   items[idx].quantity = value;
   renderTable();
+
+if (updateTableType === "weekly") saveTableButtonsWeeklyToFirebase();
+  else saveTableButtonsDailyToFirebase();
+
 }
 
 function showDeleteItemModal() {
@@ -1463,6 +1497,10 @@ function selectRow(idx, row) {
 
 renderDashboard();
 
+if (updateTableType === "weekly") saveTableButtonsWeeklyToFirebase();
+  else saveTableButtonsDailyToFirebase();
+
+
 }
 
 function toggleRowCheckbox(event, idx, checkbox) {
@@ -1474,6 +1512,10 @@ function toggleRowCheckbox(event, idx, checkbox) {
   renderTable();
 
 renderDashboard();
+
+if (updateTableType === "weekly") saveTableButtonsWeeklyToFirebase();
+  else saveTableButtonsDailyToFirebase();
+
 
 }
 
@@ -1495,6 +1537,10 @@ renderDashboard();
       if (confirm(`Delete item "${name}"?`)) {
         items.splice(idx, 1);
         renderTable();
+
+if (updateTableType === "weekly") saveTableButtonsWeeklyToFirebase();
+  else saveTableButtonsDailyToFirebase();
+
         closeDeleteItemModal();
       }
     }
@@ -1591,11 +1637,11 @@ renderDashboard();
         inventoryItems[idx].value = parseInt(document.getElementById('valueInput').value) || 0;
         inventoryItems[idx].unit = document.getElementById('unitSelect').value;
         inventoryItems[idx].lastUpdated = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
+saveInventoryItemsToFirebase()
+
         alert(`${selectState.selectedItem} updated to ${inventoryItems[idx].value} ${inventoryItems[idx].unit}`);
         renderDashboard();
-
-database.ref('inventoryItems').set(inventoryItems);
-
       }
     }
     function renderAddItemUI() {
@@ -1650,11 +1696,11 @@ database.ref('inventoryItems').set(inventoryItems);
         unit: unit,
         lastUpdated: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
       });
+
+saveInventoryItemsToFirebase()
+
       alert(`New item '${newItemName}' added with value ${value} ${unit}`);
       renderDashboard();
-
-database.ref('inventoryItems').set(inventoryItems);
-
       document.getElementById('newItemName').value = '';
       document.getElementById('newValueInput').value = 0;
       document.getElementById('newUnitSelect').selectedIndex = 0;
@@ -1680,12 +1726,12 @@ database.ref('inventoryItems').set(inventoryItems);
       if (idx >= 0) {
         if (confirm(`Delete ${itemName}?`)) {
           inventoryItems.splice(idx, 1);
+
+saveInventoryItemsToFirebase()
+
           renderDashboard();
           alert(`${itemName} deleted.`);
           renderDeleteItemUI();
-
-database.ref('inventoryItems').set(inventoryItems);
-
         }
       }
     }
@@ -1709,6 +1755,9 @@ database.ref('inventoryItems').set(inventoryItems);
         const noteText = document.getElementById('noteText').value.trim();
         statusInfo.note = noteText || "Empty";
         localStorage.setItem('kitchenNote', statusInfo.note);
+
+saveStatusInfoToFirebase();
+
         renderDashboard();
         alert('Note updated.');
         setTimeout(() => {
@@ -1736,7 +1785,7 @@ database.ref('inventoryItems').set(inventoryItems);
       statusInfo.status = "Inventory " + status;
       renderDashboard();
 
-database.ref('statusInfo').set(statusInfo);
+saveStatusInfoToFirebase().
 
       alert(`Status saved: ${employee}, ${date}, ${status}`);
     }
