@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
- <!-- Add these inside <head> or just before </body> -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
-</head>
-<body>
- // new
+
+<!-- Firebase App (core SDK) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<!-- Firebase Realtime Database SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -20,13 +20,14 @@ const firebaseConfig = {
   measurementId: "G-034YGS59CC"
 };
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getDatabase } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+ Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
 
-const app = initializeApp(firebaseConfig);
-const database = getDatabase(app);
+  // Get a reference to the database service
+  const database = firebase.database();
+</script>
 
-  </script>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>KITCHEN INVENTORY - Unified</title>
   <link href="https://fonts.googleapis.com/css2?family=Righteous&display=swap" rel="stylesheet">
@@ -749,40 +750,6 @@ const database = getDatabase(app);
   </style>
 </head>
 <body>
-
- <script>
-function readAllDataFromFirebase() {
-  // Inventory Box Items
-  database.ref('inventoryItems').on('value', snapshot => {
-    inventoryItems = snapshot.val() || [];
-    renderDashboard();
-    // If needed elsewhere, call other UI update functions here
-  });
-
-  // Weekly Table Buttons
-  database.ref('tableButtonsWeekly').on('value', snapshot => {
-    tableButtonsWeekly = snapshot.val() || [];
-    renderTableButtons();
-    renderTable();
-  });
-
-  // Daily Table Buttons
-  database.ref('tableButtonsDaily').on('value', snapshot => {
-    tableButtonsDaily = snapshot.val() || [];
-    renderTableButtons();
-    renderTable();
-  });
-
-  // Status Info
-  database.ref('statusInfo').on('value', snapshot => {
-    statusInfo = snapshot.val() || {};
-    renderDashboard();
-  });
-}
-
-// Call this ONCE when your page loads (at the end of your main <script>)
-readAllDataFromFirebase();
-</script>
   <!-- PAGE 1: DASHBOARD -->
   <div id="dashboardPage" class="page-section active">
     <div class="update-top">
@@ -965,12 +932,41 @@ readAllDataFromFirebase();
       { name: "FISH AVAILABLE", value: 10, unit: "Kg", lastUpdated: "25 May" },
       { name: "MILK AVAILABLE", value: 20, unit: "L", lastUpdated: "25 May" }
     ];
+
+// Save inventoryItems to Firebase
+function saveInventoryToFirebase() {
+  database.ref('inventoryItems').set(inventoryItems);
+}
+
+// Load inventoryItems from Firebase
+database.ref('inventoryItems').on('value', snapshot => {
+  if (snapshot.exists()) {
+    inventoryItems = snapshot.val();
+    renderDashboard();
+    renderTable();
+  }
+});
+
     let statusInfo = {
       status: "Inventory Done",
       doneBy: "John Doe",
       date: "25 May 2025",
       note: localStorage.getItem('kitchenNote') || "Empty"
     };
+
+// Save statusInfo to Firebase
+function saveStatusToFirebase() {
+  database.ref('statusInfo').set(statusInfo);
+}
+
+// Load statusInfo from Firebase
+database.ref('statusInfo').on('value', snapshot => {
+  if (snapshot.exists()) {
+    statusInfo = snapshot.val();
+    renderDashboard();
+  }
+});
+
     let dashboardLists = [
       {
         title: "Kitchen List",
@@ -997,41 +993,82 @@ readAllDataFromFirebase();
         ]
       }
     ];
-    // --- ALL ITEM LIST DATA & LOGIC ---
-    // Weekly Tables
-    let tableButtonsWeekly = [
-      {label: "Kitchen list", items: [
-        { name: "Chicken", quantity: 12, unit: "Kg", selected: false },
-        { name: "Lamb", quantity: 7, unit: "Kg", selected: false }
-      ]},
-      {label: "Drink list", items: [
-        { name: "Cola", quantity: 24, unit: "Bottle", selected: false },
-        { name: "Juice", quantity: 15, unit: "Bottle", selected: false }
-      ]},
-      {label: "Other items", items: [
-        { name: "Napkins", quantity: 100, unit: "Pack", selected: false },
-        { name: "Plates", quantity: 50, unit: "Piece", selected: false }
-      ]}
-    ];
-    // Daily Tables
-    let tableButtonsDaily = [
-      {label: "Kitchen list", items: [
-        { name: "Chicken", quantity: 2, unit: "Kg", selected: false },
-        { name: "Lamb", quantity: 1, unit: "Kg", selected: false }
-      ]},
-      {label: "Drink list", items: [
-        { name: "Cola", quantity: 4, unit: "Bottle", selected: false },
-        { name: "Juice", quantity: 3, unit: "Bottle", selected: false }
-      ]},
-      {label: "Other items", items: [
-        { name: "Napkins", quantity: 20, unit: "Pack", selected: false },
-        { name: "Plates", quantity: 10, unit: "Piece", selected: false }
-      ]}
-    ];
-    // Toggle state for weekly/daily tables
-    let dashboardTableType = localStorage.getItem('dashboardTableType') || "weekly";
+
+function saveDashboardListsToFirebase() {
+  database.ref('dashboardLists').set(dashboardLists);
+}
+
+database.ref('dashboardLists').on('value', snapshot => {
+  if (snapshot.exists()) {
+    dashboardLists = snapshot.val();
+    renderDashboard(); // or any function that uses dashboardLists
+  }
+});
+
+   // --- ALL ITEM LIST DATA & LOGIC ---
+// Weekly Tables
+let tableButtonsWeekly = [
+  {label: "Kitchen list", items: [
+    { name: "Chicken", quantity: 12, unit: "Kg", selected: false },
+    { name: "Lamb", quantity: 7, unit: "Kg", selected: false }
+  ]},
+  {label: "Drink list", items: [
+    { name: "Cola", quantity: 24, unit: "Bottle", selected: false },
+    { name: "Juice", quantity: 15, unit: "Bottle", selected: false }
+  ]},
+  {label: "Other items", items: [
+    { name: "Napkins", quantity: 100, unit: "Pack", selected: false },
+    { name: "Plates", quantity: 50, unit: "Piece", selected: false }
+  ]}
+];
+// Daily Tables
+let tableButtonsDaily = [
+  {label: "Kitchen list", items: [
+    { name: "Chicken", quantity: 2, unit: "Kg", selected: false },
+    { name: "Lamb", quantity: 1, unit: "Kg", selected: false }
+  ]},
+  {label: "Drink list", items: [
+    { name: "Cola", quantity: 4, unit: "Bottle", selected: false },
+    { name: "Juice", quantity: 3, unit: "Bottle", selected: false }
+  ]},
+  {label: "Other items", items: [
+    { name: "Napkins", quantity: 20, unit: "Pack", selected: false },
+    { name: "Plates", quantity: 10, unit: "Piece", selected: false }
+  ]}
+];
+
+// --- Firebase Save/Load for Table Data ---
+function saveTablesWeeklyToFirebase() {
+  database.ref('tableButtonsWeekly').set(tableButtonsWeekly);
+}
+function saveTablesDailyToFirebase() {
+  database.ref('tableButtonsDaily').set(tableButtonsDaily);
+}
+
+// Load weekly table data from Firebase
+database.ref('tableButtonsWeekly').on('value', snapshot => {
+  if (snapshot.exists()) {
+    tableButtonsWeekly = snapshot.val();
+    renderTableButtons && renderTableButtons();
+    renderTable && renderTable();
+    renderDashboard && renderDashboard();
+  }
+});
+
+// Load daily table data from Firebase
+database.ref('tableButtonsDaily').on('value', snapshot => {
+  if (snapshot.exists()) {
+    tableButtonsDaily = snapshot.val();
+    renderTableButtons && renderTableButtons();
+    renderTable && renderTable();
+    renderDashboard && renderDashboard();
+  }
+});
+
+// --- Toggle state for weekly/daily tables ---
+let dashboardTableType = localStorage.getItem('dashboardTableType') || "weekly";
 let updateTableType = localStorage.getItem('updateTableType') || "weekly";
-    function getCurrentTableButtons() {
+function getCurrentTableButtons() {
   return updateTableType === "weekly" ? tableButtonsWeekly : tableButtonsDaily;
 }
 
@@ -1573,19 +1610,20 @@ renderDashboard();
       input.value = Math.max(0, current + amount);
     }
     function updateItem() {
-      if (!selectState.selectedItem) {
-        alert("Select an item first!");
-        return;
-      }
-      const idx = inventoryItems.findIndex(it => it.name === selectState.selectedItem);
-      if (idx >= 0) {
-        inventoryItems[idx].value = parseInt(document.getElementById('valueInput').value) || 0;
-        inventoryItems[idx].unit = document.getElementById('unitSelect').value;
-        inventoryItems[idx].lastUpdated = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-        alert(`${selectState.selectedItem} updated to ${inventoryItems[idx].value} ${inventoryItems[idx].unit}`);
-        renderDashboard();
-      }
-    }
+  if (!selectState.selectedItem) {
+    alert("Select an item first!");
+    return;
+  }
+  const idx = inventoryItems.findIndex(it => it.name === selectState.selectedItem);
+  if (idx >= 0) {
+    inventoryItems[idx].value = parseInt(document.getElementById('valueInput').value) || 0;
+    inventoryItems[idx].unit = document.getElementById('unitSelect').value;
+    inventoryItems[idx].lastUpdated = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    saveInventoryToFirebase(); // SAVE TO CLOUD
+    alert(`${selectState.selectedItem} updated to ${inventoryItems[idx].value} ${inventoryItems[idx].unit}`);
+    renderDashboard();
+  }
+}
     function renderAddItemUI() {
       document.getElementById('content-box').innerHTML = `
         <div class="field-row">
@@ -1622,30 +1660,31 @@ renderDashboard();
       input.value = Math.max(0, current + amount);
     }
     function createNewBox() {
-      const newItemName = document.getElementById('newItemName').value.trim();
-      let unit = document.getElementById('newUnitSelect').value;
-      if (unit === "Enter Text") {
-        unit = document.getElementById('customUnitInput').value.trim() || "Unit";
-      }
-      const value = parseInt(document.getElementById('newValueInput').value) || 0;
-      if (!newItemName) {
-        alert('Please enter a name for the new item.');
-        return;
-      }
-      inventoryItems.push({
-        name: newItemName,
-        value: value,
-        unit: unit,
-        lastUpdated: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-      });
-      alert(`New item '${newItemName}' added with value ${value} ${unit}`);
-      renderDashboard();
-      document.getElementById('newItemName').value = '';
-      document.getElementById('newValueInput').value = 0;
-      document.getElementById('newUnitSelect').selectedIndex = 0;
-      document.getElementById('customUnitInput').value = '';
-      document.getElementById('customUnitInput').style.display = 'none';
-    }
+  const newItemName = document.getElementById('newItemName').value.trim();
+  let unit = document.getElementById('newUnitSelect').value;
+  if (unit === "Enter Text") {
+    unit = document.getElementById('customUnitInput').value.trim() || "Unit";
+  }
+  const value = parseInt(document.getElementById('newValueInput').value) || 0;
+  if (!newItemName) {
+    alert('Please enter a name for the new item.');
+    return;
+  }
+  inventoryItems.push({
+    name: newItemName,
+    value: value,
+    unit: unit,
+    lastUpdated: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  });
+  saveInventoryToFirebase(); // SAVE TO CLOUD
+  alert(`New item '${newItemName}' added with value ${value} ${unit}`);
+  renderDashboard();
+  document.getElementById('newItemName').value = '';
+  document.getElementById('newValueInput').value = 0;
+  document.getElementById('newUnitSelect').selectedIndex = 0;
+  document.getElementById('customUnitInput').value = '';
+  document.getElementById('customUnitInput').style.display = 'none';
+}
     function renderDeleteItemUI() {
       document.getElementById('content-box').innerHTML = `
         <div class="field-row">
@@ -1660,65 +1699,68 @@ renderDashboard();
       `;
     }
     function deleteItem() {
-      const itemName = document.getElementById('deleteItemSelect').value;
-      const idx = inventoryItems.findIndex(it => it.name === itemName);
-      if (idx >= 0) {
-        if (confirm(`Delete ${itemName}?`)) {
-          inventoryItems.splice(idx, 1);
-          renderDashboard();
-          alert(`${itemName} deleted.`);
-          renderDeleteItemUI();
-        }
-      }
+  const itemName = document.getElementById('deleteItemSelect').value;
+  const idx = inventoryItems.findIndex(it => it.name === itemName);
+  if (idx >= 0) {
+    if (confirm(`Delete ${itemName}?`)) {
+      inventoryItems.splice(idx, 1);
+      saveInventoryToFirebase(); // SAVE TO CLOUD
+      renderDashboard();
+      alert(`${itemName} deleted.`);
+      renderDeleteItemUI();
     }
+  }
+}
     function renderNoteUI() {
-      document.getElementById('content-box').innerHTML = `
-        <div style="border: 1.5px solid #81e4a2; background: linear-gradient(135deg, #0a1b0d, #06200f);
-          box-shadow: 0 4px 8px rgba(129, 228, 162, 0.3); border-radius: 10px; padding: 12px; color: white;
-          font-family: 'Righteous', cursive; font-size: 14px; min-height: 100px; display: flex;
-          flex-direction: column; justify-content: space-between;">
-          <textarea id="noteText" placeholder="empty paragraph text (empty lines)"
-            style="background: transparent; color: white; border: none; resize: none; outline: none;
-            font-family: 'Righteous', cursive; flex-grow: 1; margin-bottom: 10px; line-height: 1.4;" rows="3"></textarea>
-          <button id="noteUpdateBtn" style="align-self: center; padding: 6px 16px; border: 1.5px solid #81e4a2;
-            background: transparent; border-radius: 8px; color: white; font-size: 14px; cursor: pointer;
-            transition: all 0.3s ease; width: 100px;">Update</button>
-        </div>
-      `;
-      const updateBtn = document.getElementById('noteUpdateBtn');
-      updateBtn.addEventListener('click', () => {
-        updateBtn.classList.add('pressed');
-        const noteText = document.getElementById('noteText').value.trim();
-        statusInfo.note = noteText || "Empty";
-        localStorage.setItem('kitchenNote', statusInfo.note);
-        renderDashboard();
-        alert('Note updated.');
-        setTimeout(() => {
-          updateBtn.classList.remove('pressed');
-          document.getElementById('noteText').value = '';
-        }, 1000);
-      });
-    }
+  document.getElementById('content-box').innerHTML = `
+    <div style="border: 1.5px solid #81e4a2; background: linear-gradient(135deg, #0a1b0d, #06200f);
+      box-shadow: 0 4px 8px rgba(129, 228, 162, 0.3); border-radius: 10px; padding: 12px; color: white;
+      font-family: 'Righteous', cursive; font-size: 14px; min-height: 100px; display: flex;
+      flex-direction: column; justify-content: space-between;">
+      <textarea id="noteText" placeholder="empty paragraph text (empty lines)"
+        style="background: transparent; color: white; border: none; resize: none; outline: none;
+        font-family: 'Righteous', cursive; flex-grow: 1; margin-bottom: 10px; line-height: 1.4;" rows="3"></textarea>
+      <button id="noteUpdateBtn" style="align-self: center; padding: 6px 16px; border: 1.5px solid #81e4a2;
+        background: transparent; border-radius: 8px; color: white; font-size: 14px; cursor: pointer;
+        transition: all 0.3s ease; width: 100px;">Update</button>
+    </div>
+  `;
+  const updateBtn = document.getElementById('noteUpdateBtn');
+  updateBtn.addEventListener('click', () => {
+    updateBtn.classList.add('pressed');
+    const noteText = document.getElementById('noteText').value.trim();
+    statusInfo.note = noteText || "Empty";
+    localStorage.setItem('kitchenNote', statusInfo.note);
+    saveStatusToFirebase(); // SAVE TO CLOUD
+    renderDashboard();
+    alert('Note updated.');
+    setTimeout(() => {
+      updateBtn.classList.remove('pressed');
+      document.getElementById('noteText').value = '';
+    }, 1000);
+  });
+}
     function toggleCustomName(select) {
       document.getElementById('customNameRow').style.display = select.value === 'Enter name' ? 'block' : 'none';
     }
     function saveStatus() {
-      const employeeSelect = document.getElementById('employeeSelect');
-      const employee = employeeSelect.value === 'Enter name'
-        ? document.getElementById('customNameInput').value.trim()
-        : employeeSelect.value;
-      const date = document.getElementById('statusDate').value;
-      const status = document.getElementById('statusSelect').value;
-      if (!employee || !date || !status) {
-        alert('Please fill all required fields.');
-        return;
-      }
-      statusInfo.doneBy = employee;
-      statusInfo.date = new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-      statusInfo.status = "Inventory " + status;
-      renderDashboard();
-      alert(`Status saved: ${employee}, ${date}, ${status}`);
-    }
+  const employeeSelect = document.getElementById('employeeSelect');
+  const employee = employeeSelect.value === 'Enter name'
+    ? document.getElementById('customNameInput').value.trim()
+    : employeeSelect.value;
+  const date = document.getElementById('statusDate').value;
+  const status = document.getElementById('statusSelect').value;
+  if (!employee || !date || !status) {
+    alert('Please fill all required fields.');
+    return;
+  }
+  statusInfo.doneBy = employee;
+  statusInfo.date = new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  statusInfo.status = "Inventory " + status;
+  saveStatusToFirebase(); // SAVE TO CLOUD
+  renderDashboard();
+  alert(`Status saved: ${employee}, ${date}, ${status}`);
+}
   </script>
 </body>
 </html>
